@@ -1,6 +1,6 @@
 $script = <<-SCRIPT
-yum -y update; yum -y install git;
-cd /opt; git clone https://github.com/Dynatrace/easytrade.git
+apt -y update; apt -y install git;
+cd /opt; git clone https://github.com/RousselTM/easytrade
 cd easytrade; docker compose up -d
 SCRIPT
 
@@ -8,8 +8,6 @@ Vagrant.configure("2") do |config|
 
     #Transfert de port machine -> vm
     config.vm.network "forwarded_port", guest: 80, host: 80
-    config.vm.network "forwarded_port", guest: 5601, host: 5601
-    config.vm.network "forwarded_port", guest: 9200, host: 9200
     
     #Definir le nom de la machine dans vagrant. Replace default
     config.vm.define "formation-dynatrace"
@@ -23,12 +21,10 @@ Vagrant.configure("2") do |config|
     #Definir le hostname de la VM
     config.vm.hostname = "formation-dynatrace"
     
-    config.vm.box = "bento/centos-7"
+    config.vm.box = "bento/ubuntu-24.04"
     
-    #Installer Docker et télécharger l'image alpine 
-    config.vm.provision "docker" do |d|
-        d.pull_images "nginx"
-    end
+    # Installation de Docker
+    config.vm.provision "docker"
 
     #Installer Dynatrace Easytrade 
     config.vm.provision "shell", inline: $script
