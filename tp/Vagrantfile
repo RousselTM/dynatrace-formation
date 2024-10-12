@@ -1,0 +1,41 @@
+$script = <<-SCRIPT
+sed -i 's/#DNS=/DNS=8.8.8.8/g' /etc/systemd/resolved.conf
+systemctl restart systemd-resolved
+apt -y update; apt -y install git;
+SCRIPT
+
+#HOSTS 
+numhosts = 2
+instances = []
+(1..numhosts).each do |n| 
+  instances.push({:position => "#{n}", :name => "rousseltm-prod-#{n}", :ip => "192.168.3.#{n+2}"})
+end
+
+
+Vagrant.configure("2") do |config|
+
+    instances.each do |instance| 
+        config.vm.define instance[:name] do |i|
+            i.vm.box = "bento/ubuntu-24.04"
+            i.vm.hostname = instance[:name]
+            i.vm.network "private_network", ip: "#{instance[:ip]}"
+
+            # Config
+            i.vm.provision "shell", inline: $script
+
+            # Install docker
+            i.vm.provision "docker"
+
+            # Install APP
+            i.vm.provision "shell", path: "scripts/app-#{instance[:position]}.sh"
+        end
+
+    end
+
+    config.vm.provider "virtualbox" do |v|
+        v.customize ["modifyvm", :id, "--groups", "/Elearning by RousselTM"]
+        v.memory = 2048
+        v.cpus = 2
+    end
+
+end
