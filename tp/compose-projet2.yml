@@ -1,0 +1,56 @@
+x-environment: &default-environment
+  ROUSSELTM_ENV: prod
+  ROUSSELTM_APP: projet2
+  DT_LOCALTOVIRTUALHOSTNAME: projet2
+  DT_CUSTOM_PROP: "rousseltm_app=projet2"
+  
+services:
+     
+  nginx-projet2:
+    image: nginx
+    restart: always
+    volumes:
+      - ./nginx/prod:/etc/nginx/conf.d
+      - ./sources/projet2:/usr/share/nginx/html
+    environment: 
+      << : [*default-environment]
+    deploy:
+      replicas: 1
+    networks:
+      - frontend
+    ports:
+      - "88:80"
+
+  php-projet2:
+    image: lekpamartin/php-fpm-redis
+    restart: always
+    volumes:
+      - ./sources/projet2:/usr/share/nginx/html
+    environment: 
+      << : [*default-environment]
+    deploy:
+      replicas: 1
+    networks:
+      - frontend
+      - backend
+
+
+  redis-projet2:
+    image: redis/redis-stack
+    restart: always
+    volumes:
+      - redis_data:/data
+      - ./redis/conf:/usr/local/etc/redis
+    environment:
+      << : [*default-environment]
+    networks:
+      - backend
+
+
+networks:
+  frontend:
+  backend:
+    
+volumes:
+  redisinsight_data:
+  redis_data:
